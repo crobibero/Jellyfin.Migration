@@ -143,6 +143,11 @@ namespace Migration
                 .ToDictionary(o => o.Name, o => o);
         }
 
+        /// <summary>
+        /// Get destination media.
+        /// </summary>
+        /// <param name="adminUserId">Admin UserId. Ensures all media is gotten.</param>
+        /// <returns></returns>
         private static async Task PopulateDestinationMediaAsync(Guid adminUserId)
         {
             var baseUrl =
@@ -218,6 +223,11 @@ namespace Migration
             } while (count > 0);
         }
 
+        /// <summary>
+        /// Get watched media for user.
+        /// </summary>
+        /// <param name="userId">User to get watched media for.</param>
+        /// <returns></returns>
         private static async Task<DataTable> GetWatchedMediaAsync(Guid userId)
         {
             var baseUrl =
@@ -289,6 +299,12 @@ namespace Migration
             return watchedTable;
         }
 
+        /// <summary>
+        /// Set watched status.
+        /// </summary>
+        /// <param name="userId">User to set watched status for.</param>
+        /// <param name="watchedTable">Table of watched status.</param>
+        /// <returns></returns>
         private static async Task SetWatchedStatus(Guid userId, DataTable watchedTable)
         {
             var count = 0;
@@ -377,6 +393,12 @@ namespace Migration
             Log.Information("[SetWatchedMedia]::{0}\tTotal Watched Record Count: {1}", userId, count);
         }
 
+        /// <summary>
+        /// Set watched status for item.
+        /// </summary>
+        /// <param name="userId">User to set watched status for.</param>
+        /// <param name="itemId">Item to set watched status for.</param>
+        /// <returns></returns>
         private static async Task SetWatchedStatusItem(Guid userId, string itemId)
         {
             var success = false;
