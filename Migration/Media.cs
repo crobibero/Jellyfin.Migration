@@ -5,8 +5,13 @@ namespace Migration
     public class Media
     {
         public string Id { get; set; }
-        public string Name { get; set; }
         public Provider ProviderIds { get; set; }
+        
+        public string Name { get; set; }
+        public string SeriesName { get; set; }
+        
+        public int? IndexNumber { get; set; }
+        public int? ParentIndexNumber { get; set; }
     }
 
     public class Provider
