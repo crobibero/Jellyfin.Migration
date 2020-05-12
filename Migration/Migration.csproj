@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp3.1</TargetFramework>
+        <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
         <LangVersion>latest</LangVersion>
         <PublishTrimmed>true</PublishTrimmed>
+        <SelfContained>true</SelfContained>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,6 +18,12 @@
       <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
       <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
       <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.Sample.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
