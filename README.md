@@ -1,4 +1,4 @@
-# Emby.Migration
+# Jellyfin.Migration
 
 Migrate watch status from Emby/Jellyfin to Emby/Jellyfin. This will only migrate watched status of users that exist in both the source and destination. 
 
