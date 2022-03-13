@@ -107,7 +107,7 @@ internal static class Program
                 if (!_destinationUsers.ContainsKey(username))
                 {
                     Log.Warning("User not found in destination: {Username}", username);
-                    return;
+                    continue;
                 }
 
                 Log.Information("Starting User: {Username}", username);
