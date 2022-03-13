@@ -1,0 +1,88 @@
+2022-03-13 17:18:21.243 -06:00 [FTL] Fatal Error
+System.IO.FileNotFoundException: The configuration file 'appsettings.json' was not found and is not optional. The expected physical path was 'C:\Users\Cody Robibero\Code\Jellyfin.Migration\Jellyfin.Migration\bin\Debug\net6.0\appsettings.json'.
+   at Microsoft.Extensions.Configuration.FileConfigurationProvider.HandleException(ExceptionDispatchInfo info)
+   at Microsoft.Extensions.Configuration.FileConfigurationProvider.Load(Boolean reload)
+   at Microsoft.Extensions.Configuration.FileConfigurationProvider.Load()
+   at Microsoft.Extensions.Configuration.ConfigurationRoot..ctor(IList`1 providers)
+   at Microsoft.Extensions.Configuration.ConfigurationBuilder.Build()
+   at Jellyfin.Migration.Program.Main() in C:\Users\Cody Robibero\Code\Jellyfin.Migration\Jellyfin.Migration\Program.cs:line 41
+2022-03-13 17:19:30.573 -06:00 [FTL] Fatal Error
+System.IO.FileNotFoundException: The configuration file 'appsettings.json' was not found and is not optional. The expected physical path was 'C:\Users\Cody Robibero\Code\Jellyfin.Migration\Jellyfin.Migration\bin\Debug\net6.0\appsettings.json'.
+   at Microsoft.Extensions.Configuration.FileConfigurationProvider.HandleException(ExceptionDispatchInfo info)
+   at Microsoft.Extensions.Configuration.FileConfigurationProvider.Load(Boolean reload)
+   at Microsoft.Extensions.Configuration.FileConfigurationProvider.Load()
+   at Microsoft.Extensions.Configuration.ConfigurationRoot..ctor(IList`1 providers)
+   at Microsoft.Extensions.Configuration.ConfigurationBuilder.Build()
+   at Jellyfin.Migration.Program.Main() in C:\Users\Cody Robibero\Code\Jellyfin.Migration\Jellyfin.Migration\Program.cs:line 41
+2022-03-13 17:20:35.420 -06:00 [VRB] Configuration: Source Url: https://emby.codeh.tech
+2022-03-13 17:20:35.442 -06:00 [VRB] Configuration: Source ApiKey: b8b295bb15f44bcfa553b41ae66f126b
+2022-03-13 17:20:35.443 -06:00 [VRB] Configuration: Destination Url: https://jellyfin.codeh.tech
+2022-03-13 17:20:35.444 -06:00 [VRB] Configuration: Destination ApiKey: d95ebd8472a04abbadc6c215af586202
+2022-03-13 17:20:41.370 -06:00 [FTL] Fatal Error
+System.Text.Json.JsonException: The JSON value could not be converted to System.Guid. Path: $[0].Id | LineNumber: 0 | BytePositionInLine: 110.
+ ---> System.FormatException: The JSON value is not in a supported Guid format.
+   at System.Text.Json.Utf8JsonReader.GetGuid()
+   at System.Text.Json.Serialization.Converters.GuidConverter.Read(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options)
+   at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+   at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+   at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+   at System.Text.Json.Serialization.JsonCollectionConverter`2.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, TCollection& value)
+   at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   --- End of inner exception stack trace ---
+   at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, Utf8JsonReader& reader, Exception ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadCore[TValue](JsonConverter jsonConverter, Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadCore[TValue](JsonReaderState& readerState, Boolean isFinalBlock, ReadOnlySpan`1 buffer, JsonSerializerOptions options, ReadStack& state, JsonConverter converterBase)
+   at System.Text.Json.JsonSerializer.ContinueDeserialize[TValue](ReadBufferState& bufferState, JsonReaderState& jsonReaderState, ReadStack& readStack, JsonConverter converter, JsonSerializerOptions options)
+   at System.Text.Json.JsonSerializer.ReadAllAsync[TValue](Stream utf8Json, JsonTypeInfo jsonTypeInfo, CancellationToken cancellationToken)
+   at System.Net.Http.Json.HttpContentJsonExtensions.ReadFromJsonAsyncCore[T](HttpContent content, Encoding sourceEncoding, JsonSerializerOptions options, CancellationToken cancellationToken)
+   at Jellyfin.Migration.Program.GetUsersAsync(String url, String apiKey) in C:\Users\Cody Robibero\Code\Jellyfin.Migration\Jellyfin.Migration\Program.cs:line 136
+   at Jellyfin.Migration.Program.Main() in C:\Users\Cody Robibero\Code\Jellyfin.Migration\Jellyfin.Migration\Program.cs:line 70
+2022-03-13 17:21:35.455 -06:00 [VRB] Configuration: Source Url: https://emby.codeh.tech
+2022-03-13 17:21:35.478 -06:00 [VRB] Configuration: Source ApiKey: b8b295bb15f44bcfa553b41ae66f126b
+2022-03-13 17:21:35.478 -06:00 [VRB] Configuration: Destination Url: https://jellyfin.codeh.tech
+2022-03-13 17:21:35.479 -06:00 [VRB] Configuration: Destination ApiKey: d95ebd8472a04abbadc6c215af586202
+2022-03-13 17:21:41.307 -06:00 [INF] Source User Count: 56
+2022-03-13 17:21:41.309 -06:00 [INF] Destination User Count: 80
+2022-03-13 17:21:42.530 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 500
+2022-03-13 17:21:43.400 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 500
+2022-03-13 17:21:44.211 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 500
+2022-03-13 17:21:44.876 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 500
+2022-03-13 17:21:45.612 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 500
+2022-03-13 17:25:29.662 -06:00 [VRB] Configuration: Source Url: https://emby.codeh.tech
+2022-03-13 17:25:29.701 -06:00 [VRB] Configuration: Source ApiKey: b8b295bb15f44bcfa553b41ae66f126b
+2022-03-13 17:25:29.702 -06:00 [VRB] Configuration: Destination Url: https://jellyfin.codeh.tech
+2022-03-13 17:25:29.703 -06:00 [VRB] Configuration: Destination ApiKey: d95ebd8472a04abbadc6c215af586202
+2022-03-13 17:25:35.478 -06:00 [INF] Source User Count: 56
+2022-03-13 17:25:35.479 -06:00 [INF] Destination User Count: 80
+2022-03-13 17:25:36.283 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 500
+2022-03-13 17:25:36.909 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 1000
+2022-03-13 17:25:37.684 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 1500
+2022-03-13 17:25:38.305 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 2000
+2022-03-13 17:25:39.000 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 2500
+2022-03-13 17:25:39.624 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 3000
+2022-03-13 17:25:40.291 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 3500
+2022-03-13 17:25:40.960 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 4000
+2022-03-13 17:25:41.613 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 4500
+2022-03-13 17:25:42.265 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 5000
+2022-03-13 17:25:42.916 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 5500
+2022-03-13 17:25:43.589 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 6000
+2022-03-13 17:25:44.275 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 6500
+2022-03-13 17:25:44.924 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 7000
+2022-03-13 17:25:45.757 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 7500
+2022-03-13 17:25:46.426 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 8000
+2022-03-13 17:25:47.168 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 8500
+2022-03-13 17:25:47.861 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 9000
+2022-03-13 17:25:48.540 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 9500
+2022-03-13 17:25:49.193 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 10000
+2022-03-13 17:25:49.890 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 10500
+2022-03-13 17:25:50.574 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 11000
+2022-03-13 17:25:51.306 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 11500
+2022-03-13 17:25:52.008 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 12000
+2022-03-13 17:25:52.672 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 12500
+2022-03-13 17:25:53.328 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 13000
+2022-03-13 17:25:53.947 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 13500
+2022-03-13 17:25:54.595 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 14000
+2022-03-13 17:25:55.242 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 14500
+2022-03-13 17:25:56.036 -06:00 [INF] [PopulateDestinationMedia]	 Media Count: 15000

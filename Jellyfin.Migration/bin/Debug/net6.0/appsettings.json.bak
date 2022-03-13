@@ -1,0 +1,13 @@
+﻿{
+    "Settings": {
+        "Source": {
+            "Url": "",
+            "ApiKey": ""
+        },
+        "Destination": {
+            "Url": "",
+            "ApiKey": "",
+            "AdminUsername": ""
+        }
+    }
+}
