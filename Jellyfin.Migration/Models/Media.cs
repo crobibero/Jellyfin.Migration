@@ -2,7 +2,7 @@ namespace Jellyfin.Migration.Models;
 
 public class Media
 {
-    public Guid Id { get; init; }
+    public string Id { get; init; }
     public Provider ProviderIds { get; init; }
         
     public string Name { get; init; }
