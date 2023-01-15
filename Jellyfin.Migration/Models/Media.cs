@@ -3,13 +3,12 @@ namespace Jellyfin.Migration.Models;
 public class Media
 {
     public string Id { get; init; }
+
+    public string Path { get; init; }
+    
     public Provider ProviderIds { get; init; }
         
     public string Name { get; init; }
-    public string SeriesName { get; init; }
-        
-    public int? IndexNumber { get; init; }
-    public int? ParentIndexNumber { get; init; }
     
     public UserData UserData { get; init; }
 }

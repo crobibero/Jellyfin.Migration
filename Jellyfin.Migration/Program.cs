@@ -1,7 +1,9 @@
 ﻿using System.Data;
 using System.Globalization;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
+using System.Web;
 using Jellyfin.Migration.Models;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -68,7 +70,7 @@ internal static class Program
             _sourceApiKey = settings[SourceApiKeyKey];
             _destinationUrl = settings[DestinationUrlKey]?.TrimEnd('/');
             _destinationApiKey = settings[DestinationApiKeyKey];
-            var destinationAdminUsername = settings[DestinationAdminUsernameKey];
+            var destinationAdminUsername = settings[DestinationAdminUsernameKey]!;
 
             Log.Verbose("Configuration: Source Url: {SourceUrl}", _sourceUrl);
             Log.Verbose("Configuration: Source ApiKey: {SourceApiKey}", _sourceApiKey);
@@ -110,8 +112,7 @@ internal static class Program
             DestinationMediaTable.Columns.Add("tvdbId", typeof(string));
             DestinationMediaTable.Columns.Add("id", typeof(string));
             DestinationMediaTable.Columns.Add("name", typeof(string));
-            DestinationMediaTable.Columns.Add("seriesName", typeof(string));
-            DestinationMediaTable.Columns.Add("episodeId", typeof(string));
+            DestinationMediaTable.Columns.Add("Path", typeof(string));
             await PopulateDestinationMediaAsync(destinationAdminId);
 
             foreach (var (username, user) in _sourceUsers)
@@ -168,7 +169,16 @@ internal static class Program
     /// <returns></returns>
     private static async Task PopulateDestinationMediaAsync(Guid adminUserId)
     {
-        var baseUrl = $"{_destinationUrl}/Users/{adminUserId}/Items?Fields=ProviderIds&Recursive=true&IncludeItemTypes=Episode%2CMovie&api_key={_destinationApiKey}";
+        var baseUrl = new StringBuilder()
+            .Append(_destinationUrl)
+            .Append("/Users/")
+            .Append(adminUserId)
+            .Append("/Items")
+            .Append("?Fields=").Append(HttpUtility.UrlEncode("ProviderIds,Path"))
+            .Append("&IncludeItemTypes=").Append(HttpUtility.UrlEncode("Episode,Movie"))
+            .Append("&Recursive=true")
+            .Append("&api_key=").Append(_destinationApiKey)
+            .ToString();
 
         int count, offset = 0, totalCount = 0;
         const int limit = 500;
@@ -204,17 +214,12 @@ internal static class Program
                 }
 
                 var tvdbId = item.ProviderIds?.Tvdb;
-                var episodeId = item.IndexNumber.HasValue && item.ParentIndexNumber.HasValue
-                    ? $"S{item.ParentIndexNumber!:D2}E{item.IndexNumber!:D2}"
-                    : null;
-
                 var row = DestinationMediaTable.NewRow();
                 row["imdbId"] = imdbId ?? string.Empty;
                 row["tvdbId"] = tvdbId ?? string.Empty;
                 row["id"] = item.Id;
                 row["name"] = item.Name;
-                row["seriesName"] = item.SeriesName ?? string.Empty;
-                row["episodeId"] = episodeId ?? string.Empty;
+                row["path"] = item.Path; 
 
                 DestinationMediaTable.Rows.Add(row);
             }
@@ -233,8 +238,20 @@ internal static class Program
     /// <returns></returns>
     private static async Task<DataTable> GetWatchedMediaAsync(Guid userId, DateTime lastRun)
     {
-        var baseUrl = $"{_sourceUrl}/Users/{userId}/Items?Fields=ProviderIds&Recursive=true&IsPlayed=true&Fields=ProviderIds,Path&SortOrder=Descending&SortBy=DatePlayed&api_key={_sourceApiKey}";
-
+        var baseUrl = new StringBuilder()
+            .Append(_sourceUrl)
+            .Append("/Users/")
+            .Append(userId)
+            .Append("/Items")
+            .Append("?Fields=").Append(HttpUtility.UrlEncode("ProviderIds,Path"))
+            .Append("&IncludeItemTypes=").Append(HttpUtility.UrlEncode("Episode,Movie"))
+            .Append("&IsPlayed=true")
+            .Append("&SortOrder=Descending")
+            .Append("&SortBy=DatePlayed")
+            .Append("&Recursive=true")
+            .Append("&api_key=").Append(_sourceApiKey)
+            .ToString();
+        
         int count,
             offset = 0;
         const int limit = 500;
@@ -242,9 +259,8 @@ internal static class Program
         var watchedTable = new DataTable();
         watchedTable.Columns.Add("imdbId", typeof(string));
         watchedTable.Columns.Add("tvdbId", typeof(string));
+        watchedTable.Columns.Add("path", typeof(string));
         watchedTable.Columns.Add("name", typeof(string));
-        watchedTable.Columns.Add("seriesName", typeof(string));
-        watchedTable.Columns.Add("episodeId", typeof(string));
         watchedTable.Columns.Add("lastPlayedDate", typeof(DateTime));
 
         var totalCount = 0;
@@ -252,15 +268,7 @@ internal static class Program
         {
             var partUrl = baseUrl + $"&StartIndex={offset}&Limit={limit}";
 
-            var request = new HttpRequestMessage
-            {
-                Method = HttpMethod.Get,
-                RequestUri = new Uri(partUrl),
-                Headers =
-                {
-                    { "X-Emby-Authorization", RequestHeader }
-                }
-            };
+            
 
             var success = false;
             HttpResponseMessage response = null;
@@ -268,13 +276,23 @@ internal static class Program
             {
                 try
                 {
+                    var request = new HttpRequestMessage
+                    {
+                        Method = HttpMethod.Get,
+                        RequestUri = new Uri(partUrl),
+                        Headers =
+                        {
+                            { "X-Emby-Authorization", RequestHeader }
+                        }
+                    };
+                    
                     response = await Client.SendAsync(request);
                     response.EnsureSuccessStatusCode();
                     success = true;
                 }
                 catch (Exception e)
                 {
-                    Log.Warning(e, "[GetWatchedMedia]::{UserId}\tError: {RequestUri}", userId, request.RequestUri);
+                    Log.Warning(e, "[GetWatchedMedia]::{UserId}\tError: {RequestUri}", userId, partUrl);
                     await Task.Delay(5000);
                 }
             } while (!success);
@@ -299,10 +317,6 @@ internal static class Program
                 watchedRow["imdbId"] = imdbId ?? string.Empty;
                 watchedRow["tvdbId"] = tvdbId ?? string.Empty;
                 watchedRow["name"] = item.Name;
-                watchedRow["seriesName"] = item.SeriesName;
-                watchedRow["episodeId"] = item.IndexNumber.HasValue && item.ParentIndexNumber.HasValue
-                    ? $"S{item.ParentIndexNumber!:D2}E{item.IndexNumber!:D2}"
-                    : string.Empty;
                 watchedRow["lastPlayedDate"] = lastPlayedDate;
                 watchedTable.Rows.Add(watchedRow);
             }
@@ -328,23 +342,28 @@ internal static class Program
         {
             var imdbId = row.Field<string>("imdbId");
             var tvdbId = row.Field<string>("tvdbId");
+            var path = row.Field<string>("path");
             var name = row.Field<string>("name");
-            var seriesName = row.Field<string>("seriesName");
-            var episodeId = row.Field<string>("episodeId");
             var lastPlayedDate = row.Field<DateTime>("lastPlayedDate");
-
+            
             DataRow matchingRow = null;
             foreach (DataRow destinationRow in DestinationMediaTable.Rows)
             {
                 var destinationImdbId = destinationRow.Field<string>("imdbId");
                 var destinationTvdbId = destinationRow.Field<string>("tvdbId");
-                var destinationName = destinationRow.Field<string>("name");
-                var destinationSeriesName = destinationRow.Field<string>("seriesName");
-                var destinationEpisodeId = destinationRow.Field<string>("episodeId");
+                var destinationPath = destinationRow.Field<string>("path");
 
+                if (!string.IsNullOrEmpty(path)
+                    && !string.IsNullOrEmpty(destinationPath)
+                    && string.Equals(path, destinationPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchingRow = destinationRow;
+                    break;
+                }
+                
                 if (!string.IsNullOrEmpty(imdbId)
                     && !string.IsNullOrEmpty(destinationImdbId)
-                    && destinationImdbId.Equals(imdbId, StringComparison.OrdinalIgnoreCase))
+                    && string.Equals(destinationImdbId, imdbId, StringComparison.OrdinalIgnoreCase))
                 {
                     matchingRow = destinationRow;
                     break;
@@ -352,48 +371,17 @@ internal static class Program
 
                 if (!string.IsNullOrEmpty(tvdbId) 
                     && !string.IsNullOrEmpty(destinationTvdbId) 
-                    && destinationTvdbId.Equals(tvdbId, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    matchingRow = destinationRow;
-                    break;
-                }
-
-                if (!string.IsNullOrEmpty(name)
-                    && !string.IsNullOrEmpty(destinationName)
-                    && destinationName.Equals(name, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (string.IsNullOrEmpty(seriesName) && string.IsNullOrEmpty(destinationSeriesName))
-                    {
-                        matchingRow = destinationRow;
-                        break;
-                    }
-
-                    if (!string.IsNullOrEmpty(seriesName)
-                        && !string.IsNullOrEmpty(destinationSeriesName)
-                        && seriesName.Equals(destinationSeriesName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        matchingRow = destinationRow;
-                        break;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(seriesName)
-                    && !string.IsNullOrEmpty(destinationSeriesName)
-                    && !string.IsNullOrEmpty(episodeId)
-                    && !string.IsNullOrEmpty(destinationEpisodeId)
-                    && seriesName.Equals(destinationSeriesName, StringComparison.OrdinalIgnoreCase)
-                    && episodeId.Equals(destinationEpisodeId, StringComparison.OrdinalIgnoreCase)
-                   )
+                    && string.Equals(destinationTvdbId, tvdbId, StringComparison.OrdinalIgnoreCase))
                 {
                     matchingRow = destinationRow;
                     break;
                 }
             }
 
-            if (matchingRow == null)
+            if (matchingRow is null)
             {
-                Log.Warning("[SetWatchedStatus]::{UserId}\t imdb: {ImdbId}, tvdb: {TvdbId}, name: {Name}, seriesName: {SeriesName} not found",
-                    userId, imdbId, tvdbId, name, seriesName);
+                Log.Warning("[SetWatchedStatus]::{UserId}\t imdb: {ImdbId}, tvdb: {TvdbId}, name: {Name}, path: {Path} not found",
+                    userId, imdbId, tvdbId, name, path);
                 continue;
             }
                 
