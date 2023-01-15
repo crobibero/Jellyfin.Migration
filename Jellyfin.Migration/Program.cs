@@ -160,9 +160,7 @@ internal static class Program
         response.EnsureSuccessStatusCode();
 
         var userList = await response.Content.ReadFromJsonAsync<User[]>(JsonSerializerOptions);
-        return userList!
-            .Where(u => u.Name == "cody.robibero")
-            .ToDictionary(u => u.Name, u => u, StringComparer.OrdinalIgnoreCase);
+        return userList!.ToDictionary(u => u.Name, u => u, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
