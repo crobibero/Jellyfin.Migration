@@ -306,10 +306,15 @@ internal static class Program
                 var lastPlayedDate = item.UserData?.LastPlayedDate ?? DateTime.UtcNow;
                 if (lastPlayedDate < lastRun)
                 {
-                    Log.Information("Finished recently played media");
+                    Log.Information(
+                        "[GetWatchedMedia::{UserId}\tFinished recently played media, {Count} items",
+                        userId,
+                        totalCount);
+
                     return watchedTable;
                 }
-                
+
+                count++;
                 var imdbId = item.ProviderIds?.Imdb;
                 var tvdbId = item.ProviderIds?.Tvdb;
 
@@ -321,7 +326,6 @@ internal static class Program
                 watchedTable.Rows.Add(watchedRow);
             }
 
-            totalCount += count;
             Log.Information("[GetWatchedMedia]::{UserId}\tWatched Record Count: {Count}", userId, totalCount);
             offset += limit;
         } while (count > 0);
@@ -387,7 +391,7 @@ internal static class Program
                 
             // Count number of matched items
             totalCount++;
-            if (totalCount % 500 == 0)
+            if (totalCount % 25 == 0)
             {
                 Log.Information("[SetWatchedMedia]::{UserId}\tWatched Record Count: {Count}", userId, totalCount);
             }
