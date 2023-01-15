@@ -333,6 +333,7 @@ internal static class Program
             var name = row.Field<string>("name");
             var seriesName = row.Field<string>("seriesName");
             var episodeId = row.Field<string>("episodeId");
+            var lastPlayedDate = row.Field<DateTime>("lastPlayedDate");
 
             DataRow matchingRow = null;
             foreach (DataRow destinationRow in DestinationMediaTable.Rows)
@@ -408,7 +409,7 @@ internal static class Program
             await SetWatchedStatusItem(
                     userId,
                     matchingRow.Field<string>("id"),
-                    matchingRow.Field<DateTime>("lastPlayedDate"))
+                    lastPlayedDate)
                 .ConfigureAwait(false);
         }
             
