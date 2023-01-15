@@ -314,7 +314,7 @@ internal static class Program
                     return watchedTable;
                 }
 
-                count++;
+                totalCount++;
                 var imdbId = item.ProviderIds?.Imdb;
                 var tvdbId = item.ProviderIds?.Tvdb;
 
