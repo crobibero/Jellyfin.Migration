@@ -62,8 +62,6 @@ internal static class Program
                     lastRun = lastRun.AddDays(-1);
                 }
             }
-            
-            await File.WriteAllTextAsync(LastRunFile, DateTime.UtcNow.AddHours(-6).ToString("s", CultureInfo.InvariantCulture));
 
             var settings = config.GetSection(SettingsKey);
             _sourceUrl = settings[SourceUrlKey]?.TrimEnd('/');
