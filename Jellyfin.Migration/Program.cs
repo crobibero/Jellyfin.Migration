@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Jellyfin.Migration.Models;
@@ -9,6 +10,7 @@ namespace Jellyfin.Migration;
 
 internal static class Program
 {
+    private const string LastRunFile = "lastrun.log";
     private const string SettingsKey = "Settings";
     private const string SourceUrlKey = "Source:Url";
     private const string SourceApiKeyKey = "Source:ApiKey";
@@ -50,6 +52,18 @@ internal static class Program
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false)
                 .Build();
+
+            var lastRun = DateTime.MinValue;
+            if (File.Exists(LastRunFile))
+            {
+                var lastRunStr = await File.ReadAllTextAsync(LastRunFile);
+                if (DateTime.TryParse(lastRunStr, out lastRun))
+                {
+                    lastRun = lastRun.AddDays(-1);
+                }
+            }
+            
+            await File.WriteAllTextAsync(LastRunFile, DateTime.UtcNow.AddHours(-6).ToString("s", CultureInfo.InvariantCulture));
 
             var settings = config.GetSection(SettingsKey);
             _sourceUrl = settings[SourceUrlKey]?.TrimEnd('/');
@@ -93,7 +107,7 @@ internal static class Program
                 Log.Error("Destination Admin {DestinationAdminUsername} not found", destinationAdminUsername);
                 return;
             }
-                
+
             DestinationMediaTable.Columns.Add("imdbId", typeof(string));
             DestinationMediaTable.Columns.Add("tvdbId", typeof(string));
             DestinationMediaTable.Columns.Add("id", typeof(string));
@@ -111,9 +125,12 @@ internal static class Program
                 }
 
                 Log.Information("Starting User: {Username}", username);
-                var watchedTable = await GetWatchedMediaAsync(user.Id).ConfigureAwait(false);
+                var watchedTable = await GetWatchedMediaAsync(user.Id, lastRun).ConfigureAwait(false);
                 await SetWatchedStatus(_destinationUsers[username].Id, watchedTable);
             }
+            
+            // Update the last run time.
+            await File.WriteAllTextAsync(LastRunFile, DateTime.UtcNow.AddHours(-6).ToString("s", CultureInfo.InvariantCulture));
         }
         catch (Exception e)
         {
@@ -143,7 +160,9 @@ internal static class Program
         response.EnsureSuccessStatusCode();
 
         var userList = await response.Content.ReadFromJsonAsync<User[]>(JsonSerializerOptions);
-        return userList!.ToDictionary(u => u.Name, u => u);
+        return userList!
+            .Where(u => u.Name == "cody.robibero")
+            .ToDictionary(u => u.Name, u => u, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -214,11 +233,11 @@ internal static class Program
     /// Get watched media for user.
     /// </summary>
     /// <param name="userId">User to get watched media for.</param>
+    /// <param name="lastRun">The last time the migration ran.</param>
     /// <returns></returns>
-    private static async Task<DataTable> GetWatchedMediaAsync(Guid userId)
+    private static async Task<DataTable> GetWatchedMediaAsync(Guid userId, DateTime lastRun)
     {
-        var baseUrl =
-            $"{_sourceUrl}/Users/{userId}/Items?Fields=ProviderIds&Recursive=true&IsPlayed=true&api_key={_sourceApiKey}";
+        var baseUrl = $"{_sourceUrl}/Users/{userId}/Items?Fields=ProviderIds&Recursive=true&IsPlayed=true&Fields=ProviderIds,Path&SortOrder=Descending&SortBy=DatePlayed&api_key={_sourceApiKey}";
 
         int count,
             offset = 0;
@@ -230,6 +249,7 @@ internal static class Program
         watchedTable.Columns.Add("name", typeof(string));
         watchedTable.Columns.Add("seriesName", typeof(string));
         watchedTable.Columns.Add("episodeId", typeof(string));
+        watchedTable.Columns.Add("lastPlayedDate", typeof(DateTime));
 
         var totalCount = 0;
         do
@@ -269,6 +289,13 @@ internal static class Program
 
             foreach (var item in items)
             {
+                var lastPlayedDate = item.UserData?.LastPlayedDate ?? DateTime.UtcNow;
+                if (lastPlayedDate < lastRun)
+                {
+                    Log.Information("Finished recently played media");
+                    return watchedTable;
+                }
+                
                 var imdbId = item.ProviderIds?.Imdb;
                 var tvdbId = item.ProviderIds?.Tvdb;
 
@@ -280,6 +307,7 @@ internal static class Program
                 watchedRow["episodeId"] = item.IndexNumber.HasValue && item.ParentIndexNumber.HasValue
                     ? $"S{item.ParentIndexNumber!:D2}E{item.IndexNumber!:D2}"
                     : string.Empty;
+                watchedRow["lastPlayedDate"] = lastPlayedDate;
                 watchedTable.Rows.Add(watchedRow);
             }
 
@@ -379,7 +407,11 @@ internal static class Program
                 Log.Information("[SetWatchedMedia]::{UserId}\tWatched Record Count: {Count}", userId, totalCount);
             }
 
-            await SetWatchedStatusItem(userId, matchingRow.Field<string>("id")).ConfigureAwait(false);
+            await SetWatchedStatusItem(
+                    userId,
+                    matchingRow.Field<string>("id"),
+                    matchingRow.Field<DateTime>("lastPlayedDate"))
+                .ConfigureAwait(false);
         }
             
         Log.Information("[SetWatchedMedia]::{UserId}\tTotal Watched Record Count: {Count}", userId, totalCount);
@@ -390,16 +422,20 @@ internal static class Program
     /// </summary>
     /// <param name="userId">User to set watched status for.</param>
     /// <param name="itemId">Item to set watched status for.</param>
+    /// <param name="lastPlayedDate">The date this item was last played.</param>
     /// <returns></returns>
-    private static async Task SetWatchedStatusItem(Guid userId, string itemId)
+    private static async Task SetWatchedStatusItem(Guid userId, string itemId, DateTime lastPlayedDate)
     {
         var success = false;
         do
         {
             try
             {
-                var url = new Uri(
-                    $"{_destinationUrl}/Users/{userId}/PlayedItems/{itemId}?api_key={_destinationApiKey}");
+                var url = new Uri($"{_destinationUrl}/Users/{userId}/PlayedItems/{itemId}?api_key={_destinationApiKey}");
+                var payload = new Dictionary<string, object>
+                {
+                    ["LastPlayedDate"] = lastPlayedDate
+                };
 
                 var request = new HttpRequestMessage
                 {
@@ -408,7 +444,8 @@ internal static class Program
                     Headers =
                     {
                         { "X-Emby-Authorization", RequestHeader }
-                    }
+                    },
+                    Content = JsonContent.Create(payload)
                 };
 
                 var response = await Client.SendAsync(request);

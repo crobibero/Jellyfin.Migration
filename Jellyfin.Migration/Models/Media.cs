@@ -10,6 +10,8 @@ public class Media
         
     public int? IndexNumber { get; init; }
     public int? ParentIndexNumber { get; init; }
+    
+    public UserData UserData { get; init; }
 }
 
 public class Provider
@@ -22,4 +24,9 @@ public class Provider
 public class MediaContainer
 {
     public List<Media> Items { get; init; }
+}
+
+public class UserData
+{
+    public DateTime? LastPlayedDate { get; init; }
 }
