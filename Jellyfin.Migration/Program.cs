@@ -129,7 +129,7 @@ internal static class Program
             }
             
             // Update the last run time.
-            await File.WriteAllTextAsync(LastRunFile, DateTime.UtcNow.AddHours(-6).ToString("s", CultureInfo.InvariantCulture));
+            await File.WriteAllTextAsync(LastRunFile, DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture));
         }
         catch (Exception e)
         {
